@@ -7,9 +7,13 @@ import {
   MenuItem,
   TextField,
   Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
-import { getProjects } from "../services/api";
+import { getProjects, postProject } from "../services/api";
 import { SearchOutlined } from "@material-ui/icons";
 import Cards from "../components/cards";
 
@@ -54,6 +58,22 @@ const useStyles = makeStyles((theme) => ({
 const ProjectsPage = (props) => {
   const classes = useStyles(props);
   const [projects, setProjects] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [state, setState] = useState({});
+
+  const handleChange = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+
+    setState((old) => ({ ...old, [name]: value }));
+  };
+
+  const handleSubmit = () => {
+    postProject(state).then(() => {
+      setState({});
+      setOpen(false);
+    });
+  };
 
   const getData = async () => {
     let { data: projects } = await getProjects();
@@ -61,7 +81,7 @@ const ProjectsPage = (props) => {
   };
   useEffect(() => {
     getData();
-  }, []);
+  }, [projects]);
 
   return (
     <Container className={classes.root}>
@@ -124,7 +144,12 @@ const ProjectsPage = (props) => {
                   </TextField>
                 </Grid>
                 <Grid item>
-                  <Button className={classes.button}>Create Project</Button>
+                  <Button
+                    className={classes.button}
+                    onClick={() => setOpen(true)}
+                  >
+                    Create Project
+                  </Button>
                 </Grid>
               </Grid>
             </Grid>
@@ -145,6 +170,50 @@ const ProjectsPage = (props) => {
           </Grid>
         </Grid>
       </Grid>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        aria-labelledby="form-dialog-title"
+      >
+        <DialogTitle id="form-dialog-title">Create Project</DialogTitle>
+        <DialogContent>
+          <TextField
+            name="image"
+            fullWidth
+            label="Image Link"
+            variant="outlined"
+            value={state.image}
+            onChange={handleChange}
+            className={classes.dialogInput}
+          />
+          <TextField
+            name="title"
+            fullWidth
+            label="Project Title"
+            variant="outlined"
+            value={state.projectName}
+            onChange={handleChange}
+            className={classes.dialogInput}
+          />
+          <TextField
+            name="caption"
+            fullWidth
+            label="Caption"
+            variant="outlined"
+            value={state.tags}
+            onChange={handleChange}
+            className={classes.dialogInput}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} color="primary">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
